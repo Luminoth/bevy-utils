@@ -16,8 +16,9 @@ impl TransformUtils for Transform {
         //println!("parent: {}", parent_position);
 
         let local_position = world_position - parent_position;
-        self.translation = local_position;
-
+        if self.translation.distance_squared(local_position) > f32::EPSILON * f32::EPSILON {
+            self.translation = local_position;
+        }
         //println!("after local: {}", self.translation);
     }
 }
