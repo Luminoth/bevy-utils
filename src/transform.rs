@@ -7,14 +7,14 @@ pub trait TransformUtils {
 
 impl TransformUtils for Transform {
     fn set_world_translation(&mut self, global_transform: &GlobalTransform, world_position: Vec3) {
-        // TODO: this is exploding on floating point overflow :(
-
         /*println!(
             "before global: {}, local: {} to world_position: {}",
             global_transform.translation, self.translation, world_position
         );*/
 
         let parent_position = global_transform.translation - self.translation;
+        //println!("parent: {}", parent_position);
+
         let local_position = world_position - parent_position;
         self.translation = local_position;
 
@@ -44,7 +44,8 @@ mod tests {
     fn world_translation_no_hierarchy() {
         let mut world = World::default();
 
-        let position = Vec3::new(10.0, 11.0, 12.0);
+        let start_position = Vec3::new(5.0, 6.0, 7.0);
+        let position = Vec3::new(-10.0, -11.0, -12.0);
 
         let mut update_stage = SystemStage::parallel();
         update_stage.add_system(move |mut query: Query<TransformQueryMut>| {
@@ -58,8 +59,8 @@ mod tests {
             .spawn()
             .insert_bundle(TransformBundle {
                 // have to sync the transforms manually
-                local: Transform::from_translation(Vec3::new(5.0, 6.0, 7.0)),
-                global: GlobalTransform::from_translation(Vec3::new(5.0, 6.0, 7.0)),
+                local: Transform::from_translation(start_position),
+                global: GlobalTransform::from_translation(start_position),
             })
             .id();
 
@@ -68,6 +69,52 @@ mod tests {
         assert_eq!(
             world.get::<Transform>(entity).unwrap().translation,
             position
+        );
+    }
+
+    #[test]
+    fn world_translation_child() {
+        let mut world = World::default();
+
+        let start_position = Vec3::new(5.0, 6.0, 7.0);
+        let position = Vec3::new(-10.0, -11.0, -12.0);
+
+        let mut update_stage = SystemStage::parallel();
+        update_stage.add_system(move |mut query: Query<TransformQueryMut, With<Parent>>| {
+            let mut transform = query.single_mut();
+            transform
+                .local
+                .set_world_translation(transform.global, position);
+        });
+
+        let parent = world
+            .spawn()
+            .insert_bundle(TransformBundle {
+                // have to sync the transforms manually
+                local: Transform::from_translation(start_position),
+                global: GlobalTransform::from_translation(start_position),
+            })
+            .id();
+
+        let child = world
+            .spawn()
+            .insert_bundle(TransformBundle {
+                // have to sync the transforms manually
+                local: Transform::from_translation(start_position),
+                global: GlobalTransform::from_translation(start_position * 2.0),
+            })
+            .id();
+
+        world
+            .get_entity_mut(parent)
+            .unwrap()
+            .push_children(&[child]);
+
+        update_stage.run(&mut world);
+
+        assert_eq!(
+            world.get::<Transform>(child).unwrap().translation,
+            position - start_position
         );
     }
 }
