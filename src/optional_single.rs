@@ -1,22 +1,20 @@
-use bevy::ecs::query::{Fetch, FilterFetch, WorldQuery};
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::{QueryItem, QuerySingleError, ROQueryItem, WorldQuery};
 use bevy::prelude::*;
 
 pub trait OptionalSingle<'s, Q>
 where
     Q: WorldQuery,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item>;
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item>;
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>>;
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>>;
 }
 
 impl<'w, 's, Q, F> OptionalSingle<'s, Q> for Query<'w, 's, Q, F>
 where
     Q: WorldQuery,
     F: WorldQuery,
-    F::Fetch: FilterFetch,
 {
-    fn optional_single(&self) -> Option<<Q::ReadOnlyFetch as Fetch<'_, 's>>::Item> {
+    fn optional_single(&self) -> Option<ROQueryItem<'_, Q>> {
         match self.get_single() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,
@@ -26,7 +24,7 @@ where
         }
     }
 
-    fn optional_single_mut(&mut self) -> Option<<Q::Fetch as Fetch<'_, '_>>::Item> {
+    fn optional_single_mut(&mut self) -> Option<QueryItem<'_, Q>> {
         match self.get_single_mut() {
             Ok(item) => Some(item),
             Err(QuerySingleError::NoEntities(_)) => None,

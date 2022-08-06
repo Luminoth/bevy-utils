@@ -12,7 +12,7 @@ impl TransformUtils for Transform {
             global_transform.translation, self.translation, world_position
         );*/
 
-        let parent_position = global_transform.translation - self.translation;
+        let parent_position = global_transform.translation() - self.translation;
         //println!("parent: {}", parent_position);
 
         let local_position = world_position - parent_position;
@@ -58,10 +58,11 @@ mod tests {
 
         let entity = world
             .spawn()
-            .insert_bundle(TransformBundle {
+            .insert_bundle(SpatialBundle {
                 // have to sync the transforms manually
-                local: Transform::from_translation(start_position),
-                global: GlobalTransform::from_translation(start_position),
+                transform: Transform::from_translation(start_position),
+                global_transform: GlobalTransform::from_translation(start_position),
+                ..Default::default()
             })
             .id();
 
@@ -90,19 +91,21 @@ mod tests {
 
         let parent = world
             .spawn()
-            .insert_bundle(TransformBundle {
+            .insert_bundle(SpatialBundle {
                 // have to sync the transforms manually
-                local: Transform::from_translation(start_position),
-                global: GlobalTransform::from_translation(start_position),
+                transform: Transform::from_translation(start_position),
+                global_transform: GlobalTransform::from_translation(start_position),
+                ..Default::default()
             })
             .id();
 
         let child = world
             .spawn()
-            .insert_bundle(TransformBundle {
+            .insert_bundle(SpatialBundle {
                 // have to sync the transforms manually
-                local: Transform::from_translation(start_position),
-                global: GlobalTransform::from_translation(start_position * 2.0),
+                transform: Transform::from_translation(start_position),
+                global_transform: GlobalTransform::from_translation(start_position * 2.0),
+                ..Default::default()
             })
             .id();
 
