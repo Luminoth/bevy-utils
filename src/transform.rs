@@ -25,16 +25,16 @@ impl TransformUtils for Transform {
 
 #[derive(WorldQuery)]
 #[world_query(derive(Debug))]
-pub struct TransformQuery<'w> {
-    pub local: &'w Transform,
-    pub global: &'w GlobalTransform,
+pub struct TransformQuery {
+    pub local: &'static Transform,
+    pub global: &'static GlobalTransform,
 }
 
 #[derive(WorldQuery)]
 #[world_query(mutable, derive(Debug))]
-pub struct TransformQueryMut<'w> {
-    pub local: &'w mut Transform,
-    pub global: &'w GlobalTransform,
+pub struct TransformQueryMut {
+    pub local: &'static mut Transform,
+    pub global: &'static GlobalTransform,
 }
 
 #[cfg(test)]
